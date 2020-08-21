@@ -196,7 +196,7 @@ class gemtClearSubmissions(sublime_plugin.ApplicationCommand):
 # ----------------------------------------------------------------------
 # ----------------------------------------------------------------------
 def gemtRequest(path, data, authenticated=True, method='POST'):
-	global gemtFOLDER, gemtSERVER
+	global gemtFOLDER, gemtSERVER, session, session_expiration_time
 
 	try:
 		with open(gemtFILE, 'r') as f:
@@ -234,7 +234,7 @@ def gemtRequest(path, data, authenticated=True, method='POST'):
 
 	url = urllib.parse.urljoin(gemtSERVER, path)
 	load = urllib.parse.urlencode(data).encode('utf-8')
-	req = urllib.request.Request(url, load, method=method)
+	req = urllib.request.Request(url, load, method=method, headers={'cookie':'GEMPY_session='+session})
 	try:
 		with urllib.request.urlopen(req, None, gemtTIMEOUT) as response:
 			return response.read().decode(encoding="utf-8")
@@ -465,6 +465,7 @@ class gemtSetLocalFolder(sublime_plugin.ApplicationCommand):
 
 # ------------------------------------------------------------------
 class gemtConnect(sublime_plugin.ApplicationCommand):
+	global session
 	def run(self):
 		try:
 			with open(gemtFILE, 'r') as f:
@@ -483,7 +484,7 @@ class gemtConnect(sublime_plugin.ApplicationCommand):
 		global gemtSERVER
 		url = urllib.parse.urljoin(info['Server'], 'ask')
 		load = urllib.parse.urlencode({'who':info['CourseId']}).encode('utf-8')
-		req = urllib.request.Request(url, load)
+		req = urllib.request.Request(url, load, headers={'cookie': 'GEMPY_session='+session})
 		try:
 			with urllib.request.urlopen(req, None, gemtTIMEOUT) as response:
 				server = response.read().decode(encoding="utf-8")

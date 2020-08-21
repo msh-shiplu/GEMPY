@@ -41,7 +41,7 @@ def index():
     message = 'Hello World'
     return dict(message=message)
 
-@unauthenticated
+@authenticated
 @action('teacher_broadcasts', method='POST')
 # @action.uses('index.html')
 def teacher_broadcasts():
@@ -69,7 +69,7 @@ def teacher_broadcasts():
     return 'Content copied to white boards.'
 
 
-@unauthenticated
+@authenticated
 @action('ask', method='POST')
 # @action.uses('index.html')
 def ask():
@@ -144,7 +144,7 @@ def student_shares():
         return scoring_msg+msg
 
 
-@unauthenticated
+@authenticated
 @action('teacher_gets_queue', method='POST')
 def teacher_gets_queue():
     submissions = []
@@ -152,7 +152,7 @@ def teacher_gets_queue():
         submissions.append({'Sid': sub.id, 'Uid': sub.student_id, 'Pid': sub.problem_id, 'Content': sub.student_code, 'Filename': db.problem[sub.problem_id].filename, 'Priority': sub.submission_category, 'Name': db.student[sub.student_id].name})
     return json.dumps(submissions)
 
-@unauthenticated
+@authenticated
 @action('teacher_gets', method='POST')
 def teacher_gets():
     index = int(request.POST['index'])
@@ -186,7 +186,7 @@ def teacher_gets():
     return selected
 
 
-@unauthenticated
+@authenticated
 @action('teacher_puts_back', method='POST')
 def teacher_puts_back():
     sid = int(request.POST['sid'])
