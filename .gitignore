@@ -1,0 +1,4 @@
+databases/*
+__pycache__/*
+apps/*
+.DS_Store
