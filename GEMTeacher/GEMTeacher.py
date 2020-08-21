@@ -34,6 +34,9 @@ session_expiration_time = None
 
 # ------------------------------------------------------------------
 class gemtStatistics(sublime_plugin.WindowCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		global gemtSERVER
 		if gemtSERVER == '':
@@ -49,6 +52,9 @@ class gemtStatistics(sublime_plugin.WindowCommand):
 
 # ------------------------------------------------------------------
 class gemtReport(sublime_plugin.WindowCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		global gemtSERVER
 		if gemtSERVER == '':
@@ -135,6 +141,9 @@ def gemt_get_problem_info(fname):
 
 # ------------------------------------------------------------------
 class gemtShare(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		fname = self.view.file_name()
 		if fname is None:
@@ -487,7 +496,6 @@ class gemtConnect(sublime_plugin.ApplicationCommand):
 		req = urllib.request.Request(url, load, headers={'cookie': 'GEMPY_session='+session})
 		try:
 			with urllib.request.urlopen(req, None, gemtTIMEOUT) as response:
-				print(response.info())
 				server = response.read().decode(encoding="utf-8")
 				try:
 					with open(gemtFILE, 'r') as f:
@@ -681,17 +689,7 @@ class gemtLogin(sublime_plugin.ApplicationCommand):
 		self.email = ""
 
 	def is_visible(self):
-		global session
-		global session_expiration_time
-		global gemtCookieFile
-		if session == '' and os.path.exists(gemtCookieFile):
-			with open(gemtCookieFile, 'rb') as f:
-				cookies = pickle.load(f)
-				session = cookies['GEMPY_session']
-				session_expiration_time = cookies['session_expiration']
-		if session == '' or session_expiration_time<datetime.datetime.now():
-			return True
-		return False
+		return not is_authenticated()
 	
 	def run(self):
 		try:
@@ -763,17 +761,7 @@ class gemtLogin(sublime_plugin.ApplicationCommand):
 class gemtLogout(sublime_plugin.ApplicationCommand):
 
 	def is_visible(self):
-		global session
-		global session_expiration_time
-		global gemtCookieFile
-		if session == '' and os.path.exists(gemtCookieFile):
-			with open(gemtCookieFile, 'rb') as f:
-				cookies = pickle.load(f)
-				session = cookies['GEMPY_session']
-				session_expiration_time = cookies['session_expiration']
-		if session != '' and session_expiration_time>=datetime.datetime.now():
-			return True
-		return False
+		return is_authenticated()
 	
 	def run(self):
 		global session
@@ -782,3 +770,17 @@ class gemtLogout(sublime_plugin.ApplicationCommand):
 		if os.path.exists(gemtCookieFile):
 			os.remove(gemtCookieFile)
 		sublime.message_dialog('You have been logged out successfully!')
+
+
+def is_authenticated():
+	global session
+	global session_expiration_time
+	global gemtCookieFile
+	if session == '' and os.path.exists(gemtCookieFile):
+		with open(gemtCookieFile, 'rb') as f:
+			cookies = pickle.load(f)
+			session = cookies['GEMPY_session']
+			session_expiration_time = cookies['session_expiration']
+	if session != '' and session_expiration_time>=datetime.datetime.now():
+		return True
+	return False
