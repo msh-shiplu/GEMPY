@@ -643,7 +643,7 @@ class gemtSetName(sublime_plugin.ApplicationCommand):
 # ------------------------------------------------------------------
 class gemtUpdate(sublime_plugin.WindowCommand):
 	def run(self):
-		package_path = os.path.join(sublime.packages_path(), "GEMTeacher");
+		package_path = os.path.join(sublime.packages_path(), "GEMTeacher")
 		try:
 			version = open(os.path.join(package_path, "VERSION")).read()
 		except:
@@ -654,22 +654,22 @@ class gemtUpdate(sublime_plugin.WindowCommand):
 			module_file = os.path.join(package_path, "GEMTeacher.py")
 			menu_file = os.path.join(package_path, "Main.sublime-menu")
 			keymap_file = os.path.join(package_path, "Default.sublime-keymap")
-			version_file = os.path.join(package_path, "version.go")
-			urllib.request.urlretrieve("https://raw.githubusercontent.com/vtphan/GEM/master/src/GEMTeacher/GEMTeacher.py", module_file)
-			urllib.request.urlretrieve("https://raw.githubusercontent.com/vtphan/GEM/master/src/GEMTeacher/Main.sublime-menu", menu_file)
-			urllib.request.urlretrieve("https://raw.githubusercontent.com/vtphan/GEM/master/src/GEMTeacher/Default.sublime-keymap", keymap_file)
-			urllib.request.urlretrieve("https://raw.githubusercontent.com/vtphan/GEM/master/src/version.go", version_file)
-			with open(version_file) as f:
-				lines = f.readlines()
-			for line in lines:
-				if line.strip().startswith('const VERSION ='):
-					prefix, version = line.strip().split('const VERSION =')
-					version = version.strip().strip('"')
-					break
-			os.remove(version_file)
-			with open(os.path.join(package_path, "VERSION"), 'w') as f:
-				f.write(version)
-			sublime.message_dialog("GEM has been updated to version %s." % version)
+			# version_file = os.path.join(package_path, "version.go")
+			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMAssistant/GEMAssistant.py", module_file)
+			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMTeacher/Main.sublime-menu", menu_file)
+			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMTeacher/Default.sublime-keymap", keymap_file)
+			# urllib.request.urlretrieve("https://raw.githubusercontent.com/vtphan/GEM/master/src/version.go", version_file)
+			# with open(version_file) as f:
+			# 	lines = f.readlines()
+			# for line in lines:
+			# 	if line.strip().startswith('const VERSION ='):
+			# 		prefix, version = line.strip().split('const VERSION =')
+			# 		version = version.strip().strip('"')
+			# 		break
+			# os.remove(version_file)
+			# with open(os.path.join(package_path, "VERSION"), 'w') as f:
+			# 	f.write(version)
+			# sublime.message_dialog("GEM has been updated to version %s." % version)
 
 # ------------------------------------------------------------------
 
