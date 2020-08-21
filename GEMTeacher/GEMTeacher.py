@@ -142,6 +142,7 @@ def gemt_get_problem_info(fname):
 # ------------------------------------------------------------------
 class gemtShare(sublime_plugin.TextCommand):
 	def is_enabled(self):
+		print(is_authenticated())
 		return is_authenticated()
 
 	def run(self, edit):
