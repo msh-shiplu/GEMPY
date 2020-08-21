@@ -655,7 +655,7 @@ class gemtUpdate(sublime_plugin.WindowCommand):
 			menu_file = os.path.join(package_path, "Main.sublime-menu")
 			keymap_file = os.path.join(package_path, "Default.sublime-keymap")
 			# version_file = os.path.join(package_path, "version.go")
-			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMAssistant/GEMAssistant.py", module_file)
+			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMTeacher/GEMTeacher.py", module_file)
 			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMTeacher/Main.sublime-menu", menu_file)
 			urllib.request.urlretrieve("https://raw.githubusercontent.com/msh-shiplu/GEMPY/master/GEMTeacher/Default.sublime-keymap", keymap_file)
 			# urllib.request.urlretrieve("https://raw.githubusercontent.com/vtphan/GEM/master/src/version.go", version_file)
