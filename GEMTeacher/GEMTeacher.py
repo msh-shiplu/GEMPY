@@ -487,6 +487,7 @@ class gemtConnect(sublime_plugin.ApplicationCommand):
 		req = urllib.request.Request(url, load, headers={'cookie': 'GEMPY_session='+session})
 		try:
 			with urllib.request.urlopen(req, None, gemtTIMEOUT) as response:
+				print(response.info())
 				server = response.read().decode(encoding="utf-8")
 				try:
 					with open(gemtFILE, 'r') as f:
