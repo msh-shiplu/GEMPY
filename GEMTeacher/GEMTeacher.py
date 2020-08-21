@@ -71,6 +71,9 @@ class gemtReport(sublime_plugin.WindowCommand):
 
 # ------------------------------------------------------------------
 class gemtViewActivities(sublime_plugin.WindowCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		global gemtSERVER
 		if gemtSERVER == '':
@@ -142,7 +145,6 @@ def gemt_get_problem_info(fname):
 # ------------------------------------------------------------------
 class gemtShare(sublime_plugin.TextCommand):
 	def is_enabled(self):
-		print(is_authenticated())
 		return is_authenticated()
 
 	def run(self, edit):
@@ -172,6 +174,9 @@ class gemtShare(sublime_plugin.TextCommand):
 
 # ------------------------------------------------------------------
 class gemtDeactivateProblems(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		if self.view.file_name() is None:
 			sublime.message_dialog('Unknown problem!')
@@ -193,6 +198,9 @@ class gemtDeactivateProblems(sublime_plugin.TextCommand):
 
 # ------------------------------------------------------------------
 class gemtClearSubmissions(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		if sublime.ok_cancel_dialog('Do you want to clear all submissions and white boards?'):
 			response = gemtRequest('teacher_clears_submissions', {})
@@ -257,6 +265,9 @@ def gemtRequest(path, data, authenticated=True, method='POST'):
 
 # ------------------------------------------------------------------
 class gemtViewBulletinBoard(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		response = gemtRequest('teacher_gets_passcode', {})
 		if response.startswith('Unauthorized'):
@@ -270,6 +281,9 @@ class gemtViewBulletinBoard(sublime_plugin.ApplicationCommand):
 
 # ------------------------------------------------------------------
 class gemtAddBulletin(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		this_file_name = self.view.file_name()
 		if this_file_name is None:
@@ -286,6 +300,9 @@ class gemtAddBulletin(sublime_plugin.TextCommand):
 
 # ------------------------------------------------------------------
 class gemtPutBack(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		fname = self.view.file_name()
 		sid = os.path.basename(os.path.dirname(fname))
@@ -345,18 +362,30 @@ def gemt_grade(self, edit, decision):
 
 # ------------------------------------------------------------------
 class gemtUngrade(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		gemt_grade(self, edit, "ungraded")
 
 class gemtGradeCorrect(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		gemt_grade(self, edit, "correct")
 
 class gemtGradeIncorrect(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		gemt_grade(self, edit, "incorrect")
 
 class gemtDismissed(sublime_plugin.TextCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self, edit):
 		gemt_grade(self, edit, "dismissed")
 
@@ -390,6 +419,9 @@ def gemt_gets(self, index, priority):
 		
 # ------------------------------------------------------------------
 class gemtSeeQueue(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		response = gemtRequest('teacher_gets_queue', {})
 		if response is not None:
@@ -421,19 +453,31 @@ class gemtSeeQueue(sublime_plugin.ApplicationCommand):
 # Priorities: 1 (I got it), 2 (I need help),
 # ------------------------------------------------------------------
 class gemtGetPrioritized(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		gemt_gets(self, -1, 0)
 
 class gemtGetFromNeedHelp(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		gemt_gets(self, -1, 2)
 
 class gemtGetFromOk(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+
 	def run(self):
 		gemt_gets(self, -1, 1)
 
 # ------------------------------------------------------------------
 class gemtSetLocalFolder(sublime_plugin.ApplicationCommand):
+	def is_enabled(self):
+		return is_authenticated()
+		
 	def run(self):
 		try:
 			with open(gemtFILE, 'r') as f:
