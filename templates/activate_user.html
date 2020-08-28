@@ -1,0 +1,12 @@
+[[extend 'layout.html']]
+
+<style>
+.vars { padding: 5px 20px; text-align: center; }
+.vars th:after { content: ": " }
+.vars th, .vars td, .vars li { padding: 2px 5px; }
+</style>
+
+<form action="/GEMPY/do_activation" method="POST">
+    [[for i in range(len(user_id)):]]<div><span>[[ =name[i] ]]</span> <span>[[ =email[i] ]]</span> <span>[[=SELECT(OPTION('Teacher', _value='Teacher'), OPTION('Student', _value='Student'), OPTION('Remove', _value='Remove'), OPTION('None', _value='None'), _name='user_'+str(user_id[i]))]]</span></div>[[pass]]
+    <input type='submit' value='Activate'/>
+</form>

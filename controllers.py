@@ -31,6 +31,7 @@ from .common import db, session, T, cache, auth, logger, authenticated, unauthen
 import datetime
 import json
 from .models import add_or_update_score
+import re
 
 @unauthenticated()
 @action('index')
@@ -65,13 +66,15 @@ def teacher_broadcasts():
             tag_id = row.id
             break
     pid = db.problem.insert(teacher_id=1, problem_description=content, answer=answer, filename=filename, merit=merit, effort=effort, attempts=attempts, topic_id=topic_id, tag=tag_id, problem_uploaded_at=datetime.datetime.now(), exact_answer=exact_answer, active=1)
+    for row in db(db.student).iterselect():
+        db.board_queue.insert(student_id=row.id, content_id=pid, content_type='problem', added_at=datetime.datetime.now())
     # print(content)
     # print(answer)
     return 'Content copied to white boards.'
 
 
 @action('ask', method='POST')
-@action.uses(auth.user)
+# @action.uses(auth.user)
 # @action.uses('index.html')
 def ask():
     path = request.environ['PATH_INFO'].split('/')[1]
@@ -83,8 +86,16 @@ def ask():
 @action('student_gets', method='POST')
 def student_gets():
     boards = []
-    for row in db(db.problem.active==1).select():
-        boards.append({'Content': row.problem_description, 'Filename': row.filename, 'Type': 'Question'})
+    student_id = request.POST['uid']
+    for row in db(db.board_queue.student_id==student_id).select():
+        if row.content_type=='problem':
+            c = db.problem[row.content_id]
+            boards.append({'Content': c.problem_description, 'Filename': c.filename, 'Type': 'Question'})
+        else:
+            fd = db.feedback[row.content_id]
+            c = db((db.problem.id==db.submission.problem_id)&(db.submission_id==fd.submission_id)).select().first()
+            boards.append({'Content': fd.feedback, 'Filename': c.filename, 'Type': 'feedback'})
+
     return json.dumps(boards)
 
 @unauthenticated
@@ -145,16 +156,16 @@ def student_shares():
         return scoring_msg+msg
 
 
-@action.uses(auth.user)
 @action('teacher_gets_queue', method='POST')
+@action.uses(auth.user)
 def teacher_gets_queue():
     submissions = []
     for sub in db((db.submission.completed == None)&(db.submission.looked_at==None)).select(orderby=db.submission.code_submitted_at):
         submissions.append({'Sid': sub.id, 'Uid': sub.student_id, 'Pid': sub.problem_id, 'Content': sub.student_code, 'Filename': db.problem[sub.problem_id].filename, 'Priority': sub.submission_category, 'Name': db.student[sub.student_id].name})
     return json.dumps(submissions)
 
-@action.uses(auth.user)
 @action('teacher_gets', method='POST')
+@action.uses(auth.user)
 def teacher_gets():
     index = int(request.POST['index'])
     priority = int(request.POST['priority'])
@@ -184,12 +195,103 @@ def teacher_gets():
                 selected = {'Sid': sub.id, 'Uid': sub.student_id, 'Pid': sub.problem_id, 'Content': sub.student_code, 'Filename': db.problem[sub.problem_id].filename, 'Priority': sub.submission_category, 'Name': db.student[sub.student_id].name}
                 db.submission(sub.id).update(looked_at=datetime.datetime.now())
                 break
+    db.commit()
     return selected
 
 
-@action.uses(auth.user)
 @action('teacher_puts_back', method='POST')
+@action.uses(auth.user)
 def teacher_puts_back():
     sid = int(request.POST['sid'])
     db.submission(sid).update(looked_at=None)
     return "Submission has been put back into the queue."
+
+
+def extract_partial_credits(content):
+    matchObj = re.match(r'(\d)+ for effort')
+    if matchObj:
+        points = matchObj.group(1)
+    else:
+        points = -1
+    return points
+
+@action('teacher_grades', method='POST')
+@action.uses(auth.user)
+def teacher_grades():
+    content = request.POST['content']
+    decision = request.POST['decision']
+    sid = int(request.POST['sid'])
+    changed = request.POST['changed']
+    teacher_id = int(request.POST['uid'])
+    mesg = ''
+    sub = db.submission[sid]
+    if sub is None:
+        return "Unknown submission cannot be graded."
+    
+    student_id = sub.student_id
+    prob = db.problem[sub.problem_id]
+    if changed == "True":
+        if prob.active == 1:
+            fid = db.feedback.insert(teacher_id=teacher_id, feedback=content, feedback_given_at=datetime.datetime.now(), submission_id=sub.id)
+            mesg = "Feedback saved to student's board."
+            db.board_queue.insert(student_id=student_id, content_id=fid, content_type='feedback', added_at=datetime.datetime.now())
+    
+    if decision == "dismissed":
+        attempts = db.attempt(problem_id=prob.id, student_id=student_id)
+        db.attempt(attempts.id).update(remaining_attempt=attempts.remaining_attempt+1)
+        mesg = 'Submission dismissed'
+    elif decision == 'ungraded':
+        pass
+    else:
+        partial_credits = -1
+        if decision != 'correct':
+            partial_credits = extract_partial_credits(content)
+        
+        scoring_mesg = add_or_update_score(decision, sub.problem_id, sub.student_id, teacher_id, partial_credits)
+        mesg = scoring_mesg + "\n" + mesg
+        if decision == 'correct':
+            attempts = db.attempt(problem_id=prob.id, student_id=student_id)
+            db.attempt(attempts.id).update(remaining_attempt=0)
+        else:
+            pass
+
+        db.submission(sub.id).update(looked_at=datetime.datetime.now())
+    db.commit()
+    return mesg
+
+
+@action('activate_user', method='GET')
+@action.uses(auth.user, 'activate_user.html')
+def activate_user():
+    # current_user = auth.get_user()
+    # if db(db.teacher.user_id==current_user['id']).select() is None:
+    #     redirect(URL('not_authorized'))
+    ids, names, emails = [], [], []
+    for user in db(db.auth_user.action_token=='pending-approval').select():
+        ids.append(user.id)
+        names.append(user.first_name+" "+user.last_name)
+        emails.append(user.email)
+    return {'user_id': ids, 'name': names, 'email': emails}
+
+
+@action('do_activation', method='POST')
+@action.uses(auth.user)
+def do_activation():
+    for key, value in request.POST.items():
+        if not key.startswith('user_'):
+            continue
+        user_id = int(key[5:])
+        if value == 'None':
+            continue
+        if value == 'Remove':
+            db.auth_user(db.auth_user.id==user_id).update(action_token='Block')
+        elif value == 'Student':
+            db.auth_user(db.auth_user.id==user_id).update(action_token='')
+            db.student.insert(user_id=user_id)
+        elif value == 'Teacher':
+            db.auth_user(db.auth_user.id==user_id).update(action_token='')
+            db.teacher.insert(user_id=user_id)
+        else:
+            pass
+    db.commit()
+    return 'Activated Successfully.'

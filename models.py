@@ -15,9 +15,9 @@ import datetime
 # db.commit()
 #
 def create_tables():
-    db.define_table('student', Field('name'), Field('password'))
-    db.define_table('teacher', Field('name'), Field('password'))
-    db.define_table('course', Field('course_id', notnull=True), Field('course_name'), Field('semester'), Field('Year', type='integer'), Field('teacher_id', type='reference teacher'))
+    db.define_table('student', Field('user_id', type='reference auth_user'), redefine=True)
+    db.define_table('teacher', Field('user_id', type='reference auth_user'), redefine=True)
+#     db.define_table('course', Field('course_id', notnull=True), Field('course_name'), Field('semester'), Field('Year', type='integer'), Field('teacher_id', type='reference teacher'))
     db.define_table('attendance', Field('student_id', type='reference student', notnull=True), Field('attendance_at', type='datetime'))
     db.define_table('tag', Field('topic_description', unique=True))
     db.define_table('problem', Field('teacher_id', type='reference teacher'), Field('problem_description', type='text'), Field('answer', type='text'),\
@@ -30,6 +30,8 @@ def create_tables():
     db.define_table('feedback', Field('teacher_id', type='reference teacher'), Field('feedback', type='text'), Field('feedback_given_at', type='datetime'), Field('submission_id', type='reference submission'))
     
     db.define_table('attempt', Field('problem_id', type='reference problem'), Field('student_id', tyep='reference student'), Field('remaining_attempt', type='integer'))
+
+    db.define_table('board_queue', Field('student_id', type='reference student'), Field('content_id', type='integer'), Field('content_type'), Field('added_at', type='datetime'), redefine=True) # content_type: problem, feedback
     db.commit()
 
 
